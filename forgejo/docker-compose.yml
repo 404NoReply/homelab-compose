@@ -3,6 +3,7 @@
 # Command: docker network create forgejo_network
 # Git SSH is disabled
 # Set up a reverse proxy on port 3000 using Caddyfile
+# Check the Caddyfile in the caddy directory for an example setup
 
 services:
   server:

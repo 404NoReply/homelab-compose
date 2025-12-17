@@ -1,0 +1,19 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Set up a reverse proxy on port 9042 for liwan using Caddyfile
+
+services:
+  liwan:
+    image: ghcr.io/explodingcamera/liwan:1.1
+    container_name: liwan
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+    volumes:
+      - ./liwan-data:/data
+    environment:
+      - LIWAN_BASE_URL=https://liwan.your-domain.com
+
+networks:
+  reverse_proxy:
+    external: true

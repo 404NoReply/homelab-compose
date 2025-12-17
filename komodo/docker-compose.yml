@@ -1,0 +1,72 @@
+# Create Docker networks before running the container
+# Command: docker network create reverse_proxy
+# Command: docker network create komodo
+# Set up a reverse proxy on port 9120 for komodo-core using Caddyfile
+
+services:
+  komodo-mongo:
+    image: mongo
+    container_name: komodo-mongo
+    labels:
+      komodo.skip:
+    command: --quiet --wiredTigerCacheSizeGB 0.25
+    restart: unless-stopped
+    networks:
+      - komodo
+    volumes:
+      - ./mongo-data:/data/db
+      - ./mongo-config:/data/configdb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=komodo_db
+      - MONGO_INITDB_ROOT_PASSWORD=your-database-password
+
+  komodo-core:
+    image: ghcr.io/moghtech/komodo-core:latest
+    container_name: kmodo-core
+    labels:
+      komodo.skip:
+    restart: unless-stopped
+    networks:
+      - komodo
+      - reverse_proxy
+    volumes:
+      - ./backups:/backups
+    environment:
+      - KOMODO_DATABASE_ADDRESS=komodo-mongo:27017
+      - KOMODO_DATABASE_USERNAME=komodo_db
+      - KOMODO_DATABASE_PASSWORD=your-database-password
+      - KOMODO_HOST=https://komodo.your-domian.com
+      - KOMODO_PASSKEY=random-password-1
+      - KOMODO_FIRST_SERVER=https://komodo-periphery:8120
+      - KOMODO_WEBHOOK_SECRET=random-password-2
+      - KOMODO_JWT_SECRET=random-password-3
+      - KOMODO_LOCAL_AUTH=true
+      - KOMODO_INIT_ADMIN_USERNAME=your-username
+      - KOMODO_INIT_ADMIN_PASSWORD=your-user-password
+      - KOMODO_ENABLE_NEW_USERS=false
+    depends_on:
+      - komodo-mongo
+
+  komodo-periphery:
+    image: ghcr.io/moghtech/komodo-periphery:latest
+    container_name: komodo-periphery
+    labels:
+      komodo.skip:
+    restart: unless-stopped
+    networks:
+      - komodo
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /proc:/proc
+      - ./periphery:/etc/komodo
+    environment:
+      - KOMODO_HOST=https://komodo.your-domian.com
+      - KOMODO_PASSKEY=random-password-1
+      - KOMODO_WEBHOOK_SECRET=random-password-2
+      - KOMODO_JWT_SECRET=random-password-3
+
+networks:
+  komodo:
+    external: true
+  reverse_proxy:
+    external: true

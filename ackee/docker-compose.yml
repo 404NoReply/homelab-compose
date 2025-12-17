@@ -1,0 +1,35 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Command: docker network create ackee
+# Set up a reverse proxy on port 3000 for ackee using Caddyfile
+
+services:
+  ackee:
+    image: electerious/ackee
+    container_name: ackee
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+      - ackee
+    environment:
+      - WAIT_HOSTS=ackee-mongo:27017
+      - ACKEE_MONGODB=mongodb://ackee-mongo:27017/ackee
+      - ACKEE_USERNAME=your-username
+      - ACKEE_PASSWORD=your-password
+      - ACKEE_TRACKER=random-tracker-name
+      - ACKEE_ALLOW_ORIGIN=https://your-domain-to-tracked.com
+    depends_on:
+      - ackee-mongo
+
+  ackee-mongo:
+    image: mongo
+    container_name: ackee-mongo
+    restart: unless-stopped
+    networks:
+      - ackee
+    volumes:
+      - ./mongo:/data/db
+
+networks:
+  reverse_proxy:
+    external: true

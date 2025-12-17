@@ -1,0 +1,25 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Generate authentication JWT secret
+# Command: openssl rand -base64 32
+# For setting up user authentication, refer to this link:
+# https://docs.enclosed.cc/self-hosting/users-authentication-key-generator
+# Set up a reverse proxy on port 8787 for enclosed using Caddyfile
+
+services:
+  enclosed:
+    image: corentinth/enclosed
+    container_name: enclosed
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+    volumes:
+      - ./data:/app/.data
+    environment:
+      - AUTHENTICATION_JWT_SECRET=
+      - PUBLIC_IS_AUTHENTICATION_REQUIRED=true
+      - AUTHENTICATION_USERS=
+
+networks:
+  reverse_proxy:
+    external: true

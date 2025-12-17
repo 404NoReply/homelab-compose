@@ -1,0 +1,18 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Set up a reverse proxy on port 8000 for zen using Caddyfile
+
+services:
+  zen:
+    image: ghcr.io/sheshbabu/zen/zen:latest
+    container_name: zen
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+    volumes:
+      - ./data:/data
+      - ./images:/images
+
+networks:
+  reverse_proxy:
+    external: true

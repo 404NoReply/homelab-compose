@@ -1,0 +1,37 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Generate Admin Token
+# Command: echo -n "MySecretPassword" | argon2 "$(openssl rand -base64 32)" -e -id -k 65540 -t 3 -p 4
+# Set up a reverse proxy on port 80 for vaultwarden using Caddyfile
+
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+    volumes:
+      - ./data:/data
+    environment:
+      - DOMAIN=https://your-domain.com
+      - SIGNUPS_ALLOWED=true
+      - SIGNUPS_VERIFY=true
+      - ADMIN_TOKEN=admin-token-here
+      - LOG_FILE=/data/vaultwarden.log
+      - LOG_LEVEL=warn
+      - TRASH_AUTO_DELETE_DAYS=7
+      # Enable IP_HEADER if using cloudflare proxy
+      # - IP_HEADER='CF-Connecting-IP'
+      - LOGIN_RATELIMIT_SECONDS=60
+      - ADMIN_RATELIMIT_SECONDS=60
+      - SMTP_HOST=your-smtp-hostname
+      - SMTP_FROM=your-smtp-from-address
+      - SMTP_FROM_NAME=Vaultwarden Notification
+      - SMTP_USERNAME=your-smtp-username
+      - SMTP_PASSWORD=your-smtp-password
+      - SMTP_PORT=your-smtp-port
+
+networks:
+  reverse_proxy:
+    external: true

@@ -1,0 +1,21 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Modify Caddyfile: check the Caddyfile in the caddy directory for an example setup
+# Set up a reverse proxy on port 3000 for tinyauth using Caddyfile
+# Create users before running the container
+# Command: docker run -i -t --rm ghcr.io/steveiliop56/tinyauth:v4 user create --interactive
+
+services:
+  tinyauth:
+    image: ghcr.io/steveiliop56/tinyauth:v4
+    container_name: tinyauth
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+    environment:
+      - APP_URL=https://your-domain.com
+      - USERS=user:hashed-password
+
+networks:
+  reverse_proxy:
+    external: true

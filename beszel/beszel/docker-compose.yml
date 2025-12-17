@@ -1,0 +1,17 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Set up a reverse proxy on port 8090 for beszel using Caddyfile
+
+services:
+  beszel:
+    image: henrygd/beszel
+    container_name: beszel
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+    volumes:
+      - ./beszel_data:/beszel_data
+
+networks:
+  reverse_proxy:
+    external: true

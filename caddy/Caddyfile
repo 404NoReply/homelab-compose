@@ -1,0 +1,48 @@
+# TinyAuth Forwarder Snippet
+# This snippet defines the forward authentication configuration for TinyAuth
+# It ensures all incoming requests are authenticated via the TinyAuth service
+(tinyauth_forwarder) {
+        forward_auth tinyauth:3000 {
+            uri /api/auth/caddy
+        }
+}
+
+# Tinyauth Reverse Proxy
+auth.your-domain.com {
+        tls /certs/certificate.pem /certs/key.pem
+        reverse_proxy tinyauth:3000
+}
+
+# Example: Enable TinyAuth for a Service (Example: Cup)
+cup.example-domain.com {
+        import tinyauth_forwarder
+        reverse_proxy cup:8000
+}
+
+# Example: Basic Reverse Proxy
+beszel.your-domain.com {
+    reverse_proxy beszel:8090
+}
+
+# Example: Custom SSL/TLS Reverse Proxy
+beszel.example-domain.com {
+    tls /certs/certificate.pem /certs/key.pem
+    reverse_proxy beszel:8090
+}
+
+# Forgejo Reverse Proxy with Cloudflare Proxy Enabled
+forgejo.your-domain.com {
+        tls /certs/certificate.pem /certs/key.pem
+        reverse_proxy forgejo:3000 {
+                header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
+        }
+}
+
+# WordPress Reverse Proxy with Cloudflare Proxy Enabled
+wordpress.your-domain.com {
+        tls /certs/certificate.pem /certs/key.pem
+        reverse_proxy wp-nginx:80 {
+                header_up Host {host}
+                header_up X-Real-IP {remote_host}
+        }
+}

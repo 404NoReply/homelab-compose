@@ -1,0 +1,25 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Set up a reverse proxy on port 8443 for code-server using Caddyfile
+
+services:
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    container_name: code-server
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+    volumes:
+      - ./config:/config
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - PASSWORD=your-password
+      - PROXY_DOMAIN=code.your-domain.com
+      - DEFAULT_WORKSPACE=/config/workspace
+      - PWA_APPNAME=Code
+
+networks:
+  reverse_proxy:
+    external: true

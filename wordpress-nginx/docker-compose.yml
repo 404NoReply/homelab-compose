@@ -1,0 +1,78 @@
+# Create Docker networks before running the container
+# Command: docker network create reverse_proxy
+# Command: docker network create wordpress
+# Set up a reverse proxy on port 80 for wp-nginx using Caddyfile
+# Check the Caddyfile in the caddy directory for an example setup
+# Add the following at the end of wp-config.php to enable Redis Object Caching
+# define('WP_REDIS_HOST', 'wp-redis');
+# define('WP_REDIS_PORT', '6379');
+# Install "Redis Object Cache" extension by "Till Krüss"
+# If you get an "Error Establishing a Redis Connection" after activating the plugin!
+# Just modify the host line as shown below in object-cache.php inside the wp-content directory
+#    protected function build_parameters() {
+#       $parameters = [
+#            'scheme' => 'tcp',
+#            'host' => 'wp-redis',
+#            'port' => 6379,
+
+services:
+  wp-nginx:
+    image: nginx:alpine
+    container_name: wp-nginx
+    restart: unless-stopped
+    networks:
+      - wordpress
+      - reverse_proxy
+    volumes:
+      - ./wordpress:/var/www/html
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/wp_nginx.conf:/etc/nginx/conf.d/wp_nginx.conf
+      - ./firewall/8g.conf:/etc/nginx/firewall/8g.conf
+      - ./firewall/8g-firewall.conf:/etc/nginx/firewall/8g-firewall.conf
+      - ./firewall/block-ai-bots.conf:/etc/nginx/firewall/block-ai-bots.conf
+
+  wp-db:
+    image: mariadb:lts
+    container_name: wp-db
+    restart: unless-stopped
+    networks:
+      - wordpress
+    volumes:
+      - ./mariadb:/var/lib/mysql
+    environment:
+      - MARIADB_RANDOM_ROOT_PASSWORD=1
+      - MARIADB_DATABASE=np_wp_db
+      - MARIADB_USER=np_wp_db
+      - MARIADB_PASSWORD=your-password
+
+  wp-redis:
+    image: redis:alpine
+    container_name: wp-redis
+    restart: unless-stopped
+    networks:
+      - wordpress
+
+  wordpress:
+    image: wordpress:fpm-alpine
+    container_name: wordpress
+    restart: unless-stopped
+    networks:
+      - wordpress
+    volumes:
+      - ./wordpress:/var/www/html
+      - ./config/wp_php.ini:/usr/local/etc/php/conf.d/wp_php.ini
+    environment:
+      - WORDPRESS_DB_HOST=wp-db:3306
+      - WORDPRESS_DB_NAME=np_wp_db
+      - WORDPRESS_DB_USER=np_wp_db
+      - WORDPRESS_DB_PASSWORD=your-password
+    depends_on:
+      - wp-db
+      - wp-redis
+      - wp-nginx
+
+networks:
+  reverse_proxy:
+    external: true
+  wordpress:
+    external: true

@@ -1,0 +1,68 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Command: docker network create immich
+# Set up a reverse proxy on port 2283 for karakeep using Caddyfile
+
+services:
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:release
+    container_name: immich-server
+    restart: unless-stopped
+    networks:
+      - immich
+      - reverse_proxy
+    volumes:
+      - ./immich-data:/data
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      DB_HOSTNAME: immich-database
+      REDIS_HOSTNAME: immich-redis
+      DB_USERNAME: immich_db
+      DB_PASSWORD: secure-password
+      DB_DATABASE_NAME: immich_db
+    depends_on:
+      - immich-redis
+      - immich-database
+    healthcheck:
+      disable: false
+
+  immich-machine-learning:
+    image: ghcr.io/immich-app/immich-machine-learning:release
+    container_name: immich-machine-learning
+    restart: unless-stopped
+    networks:
+      - immich
+    volumes:
+      - ./model-cache:/cache
+    healthcheck:
+      disable: false
+
+  immich-redis:
+    image: docker.io/valkey/valkey:9@sha256:fb8d272e529ea567b9bf1302245796f21a2672b8368ca3fcb938ac334e613c8f
+    container_name: immich-redis
+    restart: unless-stopped
+    networks:
+      - immich
+    healthcheck:
+      test: redis-cli ping || exit 1
+
+  immich-database:
+    container_name: immich-database
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    restart: unless-stopped
+    networks:
+      - immich
+    volumes:
+      - ./postgresql:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: secure-password
+      POSTGRES_USER: immich_db
+      POSTGRES_DB: immich_db
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+    shm_size: 128mb
+
+networks:
+  immich:
+    external: true
+  reverse_proxy:
+    external: true

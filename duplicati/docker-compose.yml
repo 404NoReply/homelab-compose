@@ -1,0 +1,25 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Set up a reverse proxy on port 8200 for duplicati using Caddyfile
+
+services:
+  duplicati:
+    image: lscr.io/linuxserver/duplicati:latest
+    container_name: duplicati
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+    volumes:
+      - ./config:/config
+      - ./backups:/backups
+      - /path/to/source:/source
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Etc/UTC
+      - SETTINGS_ENCRYPTION_KEY=random-password
+      - DUPLICATI__WEBSERVICE_PASSWORD=your-password
+
+networks:
+  reverse_proxy:
+    external: true

@@ -1,0 +1,18 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Set up a tinyauth forwader + reverse proxy on port 8000 for cup using Caddyfile
+
+services:
+  cup:
+    image: ghcr.io/sergi0g/cup
+    container_name: cup
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: serve
+
+networks:
+  reverse_proxy:
+    external: true

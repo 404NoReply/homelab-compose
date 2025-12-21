@@ -1,0 +1,19 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Put your music files in the mounted music directory
+# Set up a reverse proxy on port 1970 for swingmusic using Caddyfile
+
+services:
+  swingmusic:
+    image: ghcr.io/swingmx/swingmusic:latest
+    container_name: swingmusic
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+    volumes:
+      - ./music:/music
+      - ./config:/config
+
+networks:
+  reverse_proxy:
+    external: true

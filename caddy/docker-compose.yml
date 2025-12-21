@@ -1,0 +1,21 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+
+services:
+  caddy:
+    image: caddy:alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80/tcp"
+      - "443:443/tcp"
+    networks:
+      - reverse_proxy
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      # For custom SSL/TLS certs
+      # - ./certs:/certs
+
+networks:
+  reverse_proxy:
+    external: true

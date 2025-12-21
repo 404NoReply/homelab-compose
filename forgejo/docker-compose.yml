@@ -1,0 +1,69 @@
+# Create these Docker networks before running the container
+# Command: docker network create reverse_proxy
+# Command: docker network create forgejo_network
+# Git SSH is disabled
+# Set up a reverse proxy on port 3000 for forgejo using Caddyfile
+# Check the Caddyfile in the caddy directory for an example setup
+
+services:
+  server:
+    image: codeberg.org/forgejo/forgejo:13
+    container_name: forgejo
+    restart: unless-stopped
+    networks:
+      - reverse_proxy
+      - forgejo_network
+    volumes:
+      - ./forgejo-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - APP_NAME=your-app-name
+      - FORGEJO__database__DB_TYPE=postgres
+      - FORGEJO__database__HOST=forgejo-database:5432
+      - FORGEJO__database__NAME=forgejo
+      - FORGEJO__database__USER=forgejo
+      - FORGEJO__database__PASSWD=your-database-password
+      - FORGEJO__UI__DEFAULT_THEME=forgejo-light
+      - FORGEJO__UI__SHOW_USER_EMAIL=false
+      - FORGEJO__SERVER__ENABLE_GZIP=true
+      - FORGEJO__SERVER__LANDING_PAGE=explore
+      - FORGEJO__SERVER__DISABLE_SSH=true
+      - FORGEJO__SERVER__DOMAIN=forgejo.your-domain.com
+      - FORGEJO__SERVER__ROOT_URL=https://forgejo.your-domain.com
+      - FORGEJO__SECURITY__INSTALL_LOCK=true
+      - FORGEJO__SECURITY__DISABLE_WEBHOOKS=true
+      - FORGEJO__SECURITY__PASSWORD_HASH_ALGO=argon2
+      - FORGEJO__SECURITY__MIN_PASSWORD_LENGTH=16
+      - FORGEJO__SECURITY__PASSWORD_COMPLEXITY=lower,upper,digit,spec
+      - FORGEJO__SECURITY__PASSWORD_CHECK_PWN=true
+      - FORGEJO__SERVICE__ENABLE_CAPTCHA=true
+      - FORGEJO__SERVICE__REQUIRE_CAPTCHA_FOR_LOGIN=true
+      - FORGEJO__SERVICE__DISABLE_USERS_PAGE=true
+      - FORGEJO__SERVICE__DISABLE_ORGANIZATIONS_PAGE=true
+      - FORGEJO__OTHER__ENABLE_FEED=false
+      - FORGEJO__OTHER__SHOW_FOOTER_VERSION=false
+      - FORGEJO__OTHER__SHOW_FOOTER_TEMPLATE_LOAD_TIME=false
+    depends_on:
+      - forgejo-database
+
+  forgejo-database:
+    image: postgres:18
+    container_name: forgejo-database
+    restart: unless-stopped
+    networks:
+      - forgejo_network
+    volumes:
+      - ./postgres-data:/var/lib/postgresql
+    environment:
+      - POSTGRES_USER=forgejo
+      - POSTGRES_PASSWORD=your-database-password
+      - POSTGRES_DB=forgejo
+
+networks:
+  reverse_proxy:
+    external: true
+  forgejo_network:
+    external: true

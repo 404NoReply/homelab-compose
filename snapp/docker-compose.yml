@@ -1,0 +1,29 @@
+# Create a Docker network before running the container
+# Command: docker network create reverse_proxy
+# Generate Secret Token
+# Command: openssl rand -base64 32
+# Set up a reverse proxy on port 3000 for snapp using Caddyfile
+
+services:
+  snapp:
+    image: uraniadev/snapp:latest
+    container_name: snapp
+    networks:
+      - reverse_proxy
+    environment:
+      - APPNAME=your-app-name
+      - ORIGIN=https://your-domain.com
+      - PUBLIC_URL=https://your-domain.com
+      - DATABASE_PROVIDER=sqlite
+      - DATABASE_URL=file:./db.sqlite
+      - ADMIN_USERNAME=your-admin-username
+      - ADMIN_EMAIL=your-admin-email
+      - ADMIN_PASSWORD=your-admin-password
+      - TOKEN_SECRET=your-secret-token
+      - ENABLE_SIGNUP=false
+      - DISABLE_HOME=true
+      - ENABLE_LIMITS=true
+
+networks:
+  reverse_proxy:
+    external: true
